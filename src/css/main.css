@@ -356,6 +356,19 @@ input[type=number] {
   background-color: #3031C1;
 }
 
+.btn-attestation-custom {
+  padding: 0.9em;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: white;
+  background-color: #910000;
+  border-radius: 0.5em;
+}
+
+.btn-attestation-custom:hover {
+  background-color: #c13030;
+}
+
 .github {
   font-size: 0.7em;
   text-align: center;

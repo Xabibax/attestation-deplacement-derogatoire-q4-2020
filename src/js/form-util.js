@@ -2,6 +2,7 @@ import { $, $$, downloadBlob } from './dom-utils'
 import { addSlash, getFormattedDate } from './util'
 import pdfBase from '../certificate.pdf'
 import { generatePdf } from './pdf-util'
+import profile from './profile'
 
 const conditions = {
   '#field-firstname': {
@@ -70,12 +71,23 @@ export function getProfile (formInputs) {
   }
   return fields
 }
+export function getProfileCustom (formInputs) {
+  const fields = profile
+  for (const field of formInputs) {
+    if (field.id === 'field-datesortie') {
+      const dateSortie = field.value.split('-')
+      fields[field.id.substring('field-'.length)] = `${dateSortie[2]}/${dateSortie[1]}/${dateSortie[0]}`
+    } else if (field.id === 'field-heuresortie') {
+      fields[field.id.substring('field-'.length)] = field.value
+    }
+  }
+  return fields
+}
 
 export function getReasons (reasonInputs) {
-  const reasons = reasonInputs
+  return reasonInputs
     .filter(input => input.checked)
     .map(input => input.value).join(', ')
-  return reasons
 }
 
 export function prepareInputs (formInputs, reasonInputs, reasonFieldset, reasonAlert, snackbar) {
@@ -83,7 +95,7 @@ export function prepareInputs (formInputs, reasonInputs, reasonFieldset, reasonA
     const exempleElt = input.parentNode.parentNode.querySelector('.exemple')
     const validitySpan = input.parentNode.parentNode.querySelector('.validity')
     if (input.placeholder && exempleElt) {
-      input.addEventListener('input', (event) => {
+      input.addEventListener('input', () => {
         if (input.value) {
           exempleElt.innerHTML = 'ex.&nbsp;: ' + input.placeholder
           validitySpan.removeAttribute('hidden')
@@ -104,7 +116,7 @@ export function prepareInputs (formInputs, reasonInputs, reasonFieldset, reasonA
   })
 
   reasonInputs.forEach(radioInput => {
-    radioInput.addEventListener('change', function (event) {
+    radioInput.addEventListener('change', () => {
       const isInError = reasonInputs.every(input => !input.checked)
       reasonFieldset.classList.toggle('fieldset-error', isInError)
       reasonAlert.classList.toggle('hidden', !isInError)
@@ -130,6 +142,37 @@ export function prepareInputs (formInputs, reasonInputs, reasonFieldset, reasonA
     console.log(getProfile(formInputs), reasons)
 
     const pdfBlob = await generatePdf(getProfile(formInputs), reasons, pdfBase)
+
+    const creationInstant = new Date()
+    const creationDate = creationInstant.toLocaleDateString('fr-CA')
+    const creationHour = creationInstant
+      .toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      .replace(':', '-')
+
+    downloadBlob(pdfBlob, `attestation-${creationDate}_${creationHour}.pdf`)
+
+    snackbar.classList.remove('d-none')
+    setTimeout(() => snackbar.classList.add('show'), 100)
+
+    setTimeout(function () {
+      snackbar.classList.remove('show')
+      setTimeout(() => snackbar.classList.add('d-none'), 500)
+    }, 6000)
+  })
+  $('#generate-btn-custom').addEventListener('click', async (event) => {
+    event.preventDefault()
+
+    const reasons = getReasons(reasonInputs)
+    if (!reasons) {
+      reasonFieldset.classList.add('fieldset-error')
+      reasonAlert.classList.remove('hidden')
+      reasonFieldset.scrollIntoView && reasonFieldset.scrollIntoView()
+      return
+    }
+
+    console.log(getProfileCustom(formInputs), reasons)
+
+    const pdfBlob = await generatePdf(getProfileCustom(formInputs), reasons, pdfBase)
 
     const creationInstant = new Date()
     const creationDate = creationInstant.toLocaleDateString('fr-CA')

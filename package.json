@@ -8,6 +8,7 @@
     "preformat": "prettier --write \"src/**/*.js\"",
     "format": "npm run lint -- --fix",
     "start": "cross-env VERSION=localversion parcel ./src/index.html",
+    "start:chrome": "cross-env VERSION=localversion parcel ./src/index.html --open chrome",
     "start:grid": "cross-env VERSION=localversion parcel ./src/grid.html",
     "clean:dist": "rimraf dist",
     "prebuild": "run-p lint clean:dist",
